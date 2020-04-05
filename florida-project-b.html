@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+
+<title> Florida Project</title>
+
+<style> 
+    
+    body {
+        padding: 0;
+        margin: 10;
+        background: cream;
+    }
+    h1, h2 {
+        position: absolute;
+        left: 10px;
+        top: 0px;
+        font-family: "Proxima Nova", Montserrat, sans-serif;
+        font-size: 1.6em;
+        font-weight: 100;
+        color: #706f72;
+    }
+    
+    h2 {
+        top: 500px;
+        font-size: 1.6em;
+    }
+    
+.outline {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.feature {
+  fill: #ccc;
+}
+
+.mesh {
+  fill: none;
+  stroke: #fff;
+  stroke-width: .5px;
+  stroke-linejoin: round;
+}
+
+path {
+  fill: #706f72;
+    fill-opacity:.7;
+  stroke: whitesmoke;
+  stroke-width: 1.5px;
+}
+.county:hover{
+  fill:#f9db35;
+    fill-opacity:.7;
+}
+
+</style>
+
+<body>
+    
+    <h1> Florida Counties</h1>
+    
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="//d3js.org/topojson.v1.min.js"></script>
+    
+<script>
+    
+//The SVG   
+var width = 900,
+    height = 650;
+    
+//Map and Projection 
+var projection = d3.geo.albers();
+
+/*
+var projection = d3.geo.transverseMercator()
+          .rotate([120 + 30 / 60, -38 - 50 / 60])
+
+*/
+
+var path = d3.geo.path()
+.projection(projection);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+d3.json("usa-counties.json", function(error, us) {
+  if (error) throw error;
+
+  var states = topojson.feature(us, us.objects.states),
+      state = states.features.filter(function(d) { return d.id === 12; })[0];
+    
+
+  projection.scale(1)
+    .translate([0, 0]);
+ 
+  var b = path.bounds(state),
+    s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+    t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+ 
+  projection.scale(s)
+    .translate(t);
+
+  svg.append("path")
+      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+      .attr("class", "mesh")
+      .attr("d", path);
+
+  svg.append("path")
+      .datum(state)
+      .attr("class", "outline")
+      .attr("d", path)
+      .attr('id', 'land');
+
+   svg.append("clipPath")
+      .attr("id", "clip-land")
+      .append("use")
+      .attr("xlink:href", "#land");
+
+  svg.selectAll("path")
+      .data(topojson.feature(us, us.objects.counties).features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr('county-id', function(d){
+         return d.id
+      }).attr("clip-path", "url(#clip-land)")
+      .attr('class', 'county');
+    
+    
+      
+
+});
+
+
+</script>
+    <h2></h2>
+</body>
